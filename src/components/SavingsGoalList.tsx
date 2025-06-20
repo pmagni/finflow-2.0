@@ -1,5 +1,6 @@
+import SavingsGoalForm from './SavingsGoalForm';
+import { SavingsGoalListItem } from './SavingsGoalListItem';
 import type { SavingsGoal } from '../types';
-import SavingsGoalListItem from './SavingsGoalListItem';
 
 interface SavingsGoalListProps {
   goals: SavingsGoal[];

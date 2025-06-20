@@ -1,42 +1,24 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
-import { supabase } from "../services/supabase";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-  const { user, loading } = useAuth();
+  const { user, loading, signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSigningUp, setIsSigningUp] = useState(false);
+  const navigate = useNavigate();
 
   const handleAuthAction = async () => {
     if (isSigningUp) {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      if (error) {
-        console.error("Error signing up:", error);
-      } else {
-        alert("Check your email for the confirmation link!");
-      }
+      console.log("Signing up with:", email);
     } else {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        console.error("Error signing in:", error);
+      const { error } = await signIn(email, password);
+      if (!error) {
+        navigate('/');
+      } else {
+        alert(`Login failed: ${error}`);
       }
-    }
-  };
-
-  const handleOAuthLogin = async (provider: "github" | "google") => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-    });
-    if (error) {
-      console.error(`Error logging in with ${provider}:`, error);
     }
   };
 
@@ -49,55 +31,53 @@ export default function Login() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-darkPrimary">
-      <div className="p-8 bg-darkSecondary rounded-2xl shadow-lg w-full max-w-sm">
-        <div className="flex justify-center mb-6">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" fill="#2AF5C1"/>
-            <path d="M12 12L22 7" stroke="#0E1111" strokeWidth="1.5"/>
-            <path d="M12 12V22" stroke="#0E1111" strokeWidth="1.5"/>
-            <path d="M12 12L2 7" stroke="#0E1111" strokeWidth="1.5"/>
-            <path d="M17 4.5L7 9.5" stroke="#0E1111" strokeWidth="1.5"/>
-          </svg>
-        </div>
-        <h1 className="text-2xl font-bold mb-6 text-center text-white">
-          {isSigningUp ? "Crea una cuenta" : "Bienvenido de Vuelta"}
-        </h1>
-        <div className="space-y-4">
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 bg-darkAccent border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white"
-          />
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 bg-darkAccent border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white"
-          />
+    <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <div className="w-full max-w-md p-8 space-y-8 bg-gray-800 rounded-lg shadow-lg">
+        <h2 className="text-3xl font-bold text-center text-white">
+          {isSigningUp ? 'Create Account' : 'Welcome Back'}
+        </h2>
+        <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleAuthAction(); }}>
+          <div>
+            <label htmlFor="email" className="sr-only">Email address</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 text-white bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Email address"
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="sr-only">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 text-white bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Password"
+            />
+          </div>
           <button
-            onClick={handleAuthAction}
-            className="w-full bg-primary text-black font-bold p-3 rounded-lg hover:bg-opacity-90 transition-colors"
+            type="submit"
+            className="w-full py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
           >
-            {isSigningUp ? "Registrarse" : "Iniciar Sesión"}
+            {isSigningUp ? 'Sign Up' : 'Sign In'}
           </button>
-        </div>
-        
-        {/* Social Logins can be added here if needed, following the style */}
-
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => setIsSigningUp(!isSigningUp)}
-            className="text-light-gray hover:text-white transition-colors"
-          >
-            {isSigningUp
-              ? "¿Ya tienes una cuenta? Inicia Sesión"
-              : "¿No tienes una cuenta? Regístrate"}
+        </form>
+        <p className="text-sm text-center text-gray-400">
+          {isSigningUp ? 'Already have an account?' : "Don't have an account?"}
+          <button onClick={() => setIsSigningUp(!isSigningUp)} className="ml-1 font-medium text-blue-400 hover:underline">
+            {isSigningUp ? 'Sign In' : 'Sign Up'}
           </button>
-        </div>
+        </p>
       </div>
     </div>
   );

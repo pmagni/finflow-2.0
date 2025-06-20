@@ -3,16 +3,17 @@ import { useBudget } from '../hooks/useBudget';
 import { formatCurrency } from '../utils/formatters';
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import 'chart.js/auto';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const getFormattedCurrentMonth = () => {
+function getFormattedCurrentMonth() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-};
+}
 
 export default function Budget() {
-  const [currentMonth, setCurrentMonth] = useState(getFormattedCurrentMonth());
+  const [currentMonth] = useState(getFormattedCurrentMonth());
   const { budget, loading, error, saveBudget } = useBudget(currentMonth);
 
   const [income, setIncome] = useState('');
