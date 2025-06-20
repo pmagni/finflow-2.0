@@ -1,5 +1,6 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Login from "../pages/Login";
 
 export default function ProtectedRoute() {
   const { user, loading } = useAuth();
@@ -9,7 +10,7 @@ export default function ProtectedRoute() {
   }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Login />;
   }
 
   return <Outlet />;

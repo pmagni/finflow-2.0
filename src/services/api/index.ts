@@ -6,4 +6,5 @@ export * from './transactions';
 export * from './savingsGoals';
 export * from './ai';
 export * from './admin';
-export * from './budgets'; 
+export * from './budgets';
+export * from './gamification'; 

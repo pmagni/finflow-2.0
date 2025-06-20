@@ -1,5 +1,6 @@
 {
   "imports": {
+    "jsr:@supabase/functions-js": "jsr:@supabase/functions-js@^0.8.0",
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
     "openai": "https://esm.sh/openai@4.47.3"
   }

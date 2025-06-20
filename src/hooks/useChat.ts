@@ -1,54 +1,74 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useStore } from '../store/useStore';
+import { aiApi } from '../services/api';
 
-// Placeholder for the AI chat message type
-type ChatMessage = {
+export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
-};
+}
 
 export const useChat = () => {
-  const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Get current financial data from our Zustand store
+  const { debts } = useStore(state => state.debtState);
+  // In a real app, you would get budget and goals here as well
+  // const { budget } = useStore(state => state.budgetState); 
 
   const sendMessage = async (message: string) => {
-    if (!user) return;
-
+    setError(null);
     const newMessage: ChatMessage = { role: 'user', content: message };
-    setMessages((prev) => [...prev, newMessage]);
+    // Add user message and a placeholder for the assistant's response
+    setMessages((prev) => [...prev, newMessage, { role: 'assistant', content: '' }]);
     setLoading(true);
 
     try {
-      // This is where you would call your n8n webhook
-      const response = await fetch('/api/ai/ask', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const userContext = {
+        question: message,
+        financials: {
+          debts: debts.map(d => ({ name: d.name, balance: d.balance, interest_rate: d.interest_rate })),
+          // budget,
         },
-        body: JSON.stringify({
-          userId: user.id,
-          message,
-        }),
+      };
+      
+      const response = await aiApi.getAdvise(userContext);
+      
+      if (!response.data || !response.data.body) {
+        throw new Error('No response body from AI');
+      }
+
+      const reader = response.data.body.getReader();
+      const decoder = new TextDecoder();
+      
+      reader.read().then(function processText({ done, value }: { done: boolean, value: Uint8Array }): any {
+        if (done) {
+          setLoading(false);
+          return;
+        }
+        
+        const chunk = decoder.decode(value, { stream: true });
+        setMessages((prev) => {
+          const lastMessage = prev[prev.length - 1];
+          const updatedLastMessage = { ...lastMessage, content: lastMessage.content + chunk };
+          return [...prev.slice(0, -1), updatedLastMessage];
+        });
+
+        return reader.read().then(processText);
       });
 
-      const data = await response.json();
-      const assistantMessage: ChatMessage = {
-        role: 'assistant',
-        content: data.reply, // Assuming the webhook returns a 'reply' field
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error sending message to AI:', error);
-      const errorMessage: ChatMessage = {
-        role: 'assistant',
-        content: 'Sorry, I am having trouble connecting.',
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
+    } catch (err: any) {
+      const errorMessage = 'Sorry, I am having trouble connecting. Please try again later.';
+      setError(errorMessage);
+       setMessages((prev) => {
+          const lastMessage = prev[prev.length - 1];
+          const updatedLastMessage = { ...lastMessage, content: errorMessage };
+          return [...prev.slice(0, -1), updatedLastMessage];
+        });
       setLoading(false);
     }
   };
 
-  return { messages, loading, sendMessage };
+  return { messages, loading, error, sendMessage };
 }; 

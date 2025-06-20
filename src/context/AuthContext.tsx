@@ -40,70 +40,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
   const [userRole, setUserRole] = useState<AppRole>(null);
 
-  // Load user preferences when user changes
   useEffect(() => {
     if (user) {
-      loadUserPreferences();
-      loadUserRole();
+      loadUserData();
     } else {
       setUserPreferences(null);
       setUserRole(null);
     }
   }, [user]);
 
-  const loadUserRole = async () => {
+  const loadUserData = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
+    const { data, error } = await supabase.rpc('get_user_data');
 
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error loading user role:', error);
+    if (error) {
+      console.error('Error loading user data:', error);
+      return;
     }
 
-    if (data) {
-      setUserRole(data.role);
-    }
-  };
+    if (data && data.length > 0) {
+      const userData = data[0];
+      setUserRole(userData.user_role);
+      
+      if (userData.preferences) {
+        setUserPreferences(userData.preferences);
+      } else {
+        // Create default preferences if none exist
+        const defaultPreferences: Omit<UserPreferences, 'id' | 'created_at' | 'updated_at'> = {
+          user_id: user.id,
+          currency: 'USD',
+          language: 'es',
+          notifications_enabled: true,
+          email_notifications: true,
+          push_notifications: true,
+          theme: 'auto',
+        };
 
-  const loadUserPreferences = async () => {
-    if (!user) return;
+        const { data: newPrefs, error: createError } = await supabase
+          .from('user_preferences')
+          .insert(defaultPreferences)
+          .select()
+          .single();
 
-    const { data, error } = await supabase
-      .from('user_preferences')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-      console.error('Error loading user preferences:', error);
-    }
-
-    if (data) {
-      setUserPreferences(data);
-    } else {
-      // Create default preferences if none exist
-      const defaultPreferences: Omit<UserPreferences, 'id' | 'created_at' | 'updated_at'> = {
-        user_id: user.id,
-        currency: 'USD',
-        language: 'es',
-        notifications_enabled: true,
-        email_notifications: true,
-        push_notifications: true,
-        theme: 'auto',
-      };
-
-      const { data: newPrefs, error: createError } = await supabase
-        .from('user_preferences')
-        .insert(defaultPreferences)
-        .select()
-        .single();
-
-      if (!createError && newPrefs) {
-        setUserPreferences(newPrefs);
+        if (!createError && newPrefs) {
+          setUserPreferences(newPrefs);
+        }
       }
     }
   };

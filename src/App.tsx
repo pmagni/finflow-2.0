@@ -5,11 +5,11 @@ import DebtPlanner from "./pages/DebtPlanner";
 import Budget from "./pages/Budget";
 import Chat from "./pages/Chat";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login.tsx";
 import Savings from "./pages/Savings";
 import Challenges from "./pages/Challenges";
-import Profile from "./pages/Profile";
+import { Profile } from "./pages/Profile";
 import Education from "./pages/Education";
+import Login from "./pages/Login";
 
 const router = createBrowserRouter([
   {
@@ -57,7 +57,7 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: "/login",
+    path: "/auth",
     element: <Login />,
   },
 ]);

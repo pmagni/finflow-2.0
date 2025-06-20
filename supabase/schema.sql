@@ -165,6 +165,13 @@ create table if not exists public.user_preferences (
     updated_at timestamp with time zone default timezone('utc', now())
 );
 
+-- USER ROLES
+create table if not exists public.user_roles (
+    id uuid primary key default uuid_generate_v4(),
+    user_id uuid references auth.users(id) on delete cascade not null,
+    role text not null
+);
+
 -- RLS POLICIES
 -- First, enable RLS for all tables
 alter table public.organizations enable row level security;
@@ -182,6 +189,7 @@ alter table public.education_modules enable row level security;
 alter table public.user_education_progress enable row level security;
 alter table public.gamification_events enable row level security;
 alter table public.user_preferences enable row level security;
+alter table public.user_roles enable row level security;
 
 -- Organizations
 create policy "Users can view organizations they are a member of."
@@ -289,6 +297,17 @@ create policy "Users can manage their own preferences."
 on public.user_preferences for all
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+-- USER ROLES
+create policy "Users can view their own role."
+on public.user_roles for select
+using (auth.uid() = user_id);
+
+create policy "Admins can manage all roles."
+on public.user_roles for all
+using (
+  (select role from public.user_roles where user_id = auth.uid()) = 'admin'
+);
 
 -- Create indexes for better performance
 create index if not exists idx_debts_user_id on public.debts(user_id);

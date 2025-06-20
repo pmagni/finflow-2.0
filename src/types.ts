@@ -110,7 +110,7 @@ export type Achievement = {
   id: string;
   user_id: string;
   title: string;
-  description?: string;
+  description: string;
   achieved_at: string;
 };
 

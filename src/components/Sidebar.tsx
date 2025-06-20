@@ -1,73 +1,73 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
-  LayoutDashboard,
-  Landmark,
-  PiggyBank,
-  Target,
-  Trophy,
-  School,
-  User,
-  Settings,
-  LogOut,
-  ChevronFirst,
-  ChevronLast
-} from 'lucide-react';
+  FiGrid,
+  FiTarget,
+  FiPieChart,
+  FiBookOpen,
+  FiTrendingUp,
+  FiLogOut,
+  FiUser
+} from "react-icons/fi";
 
-// For now, we will have a static sidebar. We will add the collapse logic later.
-
-const navItems = [
-  { icon: <LayoutDashboard size={20} />, text: 'Dashboard', to: '/' },
-  { icon: <Landmark size={20} />, text: 'Plan de Deudas', to: '/debts' },
-  { icon: <PiggyBank size={20} />, text: 'Presupuesto', to: '/budget' },
-  { icon: <Target size={20} />, text: 'Metas de Ahorro', to: '/savings' },
-  { icon: <Trophy size={20} />, text: 'Retos', to: '/challenges' },
-  { icon: <School size={20} />, text: 'Educación', to: '/education' },
+const navLinks = [
+  { to: "/", text: "Dashboard", icon: FiGrid },
+  { to: "/debts", text: "Plan de Deudas", icon: FiTrendingUp },
+  { to: "/budget", text: "Presupuesto", icon: FiPieChart },
+  { to: "/savings", text: "Metas de Ahorro", icon: FiTarget },
+  { to: "/challenges", text: "Retos", icon: FiBookOpen },
+  { to: "/education", text: "Educación", icon: FiBookOpen },
 ];
 
-const Sidebar = () => {
-  // We will add state for expanded/collapsed later
-  const isExpanded = true;
+export default function Sidebar() {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
-    <aside className="h-screen">
-      <nav className="h-full flex flex-col bg-container border-r border-gray-700 shadow-sm">
-        <div className="p-4 pb-2 flex justify-between items-center">
-          <h1 className={`text-2xl font-bold text-primary ${isExpanded ? 'block' : 'hidden'}`}>FinFlow</h1>
-          {/* Collapse button will go here */}
-        </div>
-
-        <ul className="flex-1 px-3">
-          {navItems.map((item) => (
-            <li key={item.text}>
+    <aside className="w-64 bg-darkSecondary text-darkLightText flex flex-col p-4">
+      <div className="text-2xl font-bold mb-10">FinFlow</div>
+      <nav className="flex-1">
+        <ul>
+          {navLinks.map((link) => (
+            <li key={link.to}>
               <NavLink
-                to={item.to}
-                className={({ isActive }) => `
-                  relative flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer
-                  transition-colors group
-                  ${isActive ? 'bg-primary/20 text-primary' : 'hover:bg-primary/10 text-light-gray hover:text-white'}
-                `}
+                to={link.to}
+                className={({ isActive }) =>
+                  `flex items-center p-2 my-2 rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-darkAccent text-white"
+                      : "hover:bg-darkAccent"
+                  }`
+                }
               >
-                {item.icon}
-                <span className={`overflow-hidden transition-all ${isExpanded ? 'w-52 ml-3' : 'w-0'}`}>{item.text}</span>
+                <link.icon className="mr-3" />
+                {link.text}
               </NavLink>
             </li>
           ))}
         </ul>
-        
-        <div className="border-t flex p-3 border-gray-700">
-            <User/>
-            <div className={`flex justify-between items-center overflow-hidden transition-all ${isExpanded ? "w-52 ml-3" : "w-0"}`}>
-                <div className='leading-4'>
-                    <h4 className='font-semibold'>Usuario</h4>
-                    <span className='text-xs text-gray-600'>usuario@email.com</span>
-                </div>
-                <LogOut size={20} />
-            </div>
-        </div>
       </nav>
+      <div className="mt-auto">
+        <div className="p-2 flex items-center">
+          <FiUser className="mr-3" />
+          <div>
+            <p className="font-semibold">Usuario</p>
+            <p className="text-xs text-gray-400">{user?.email}</p>
+          </div>
+        </div>
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center p-2 mt-2 text-left rounded-lg hover:bg-darkAccent"
+        >
+          <FiLogOut className="mr-3" />
+          Cerrar sesión
+        </button>
+      </div>
     </aside>
   );
-};
-
-export default Sidebar; 
+} 

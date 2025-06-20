@@ -63,10 +63,14 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Find the user to invite by their email
-    const { data: invitedUserData, error: invitedUserError } = await adminSupabaseClient.auth.admin.getUserByEmail(email);
+    // Invite a user by email. If the user already exists, it returns the user object.
+    // Otherwise, it sends an invitation email.
+    const { data: invitedUserData, error: invitedUserError } = await adminSupabaseClient.auth.admin.inviteUserByEmail(
+      email
+    );
+
     if (invitedUserError || !invitedUserData.user) {
-      return new Response(JSON.stringify({ error: 'User to invite not found' }), {
+      return new Response(JSON.stringify({ error: invitedUserError?.message || 'Could not find or invite user.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 404,
       });
@@ -106,7 +110,8 @@ Deno.serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    const message = error instanceof Error ? error.message : String(error);
+    return new Response(JSON.stringify({ error: message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     });
