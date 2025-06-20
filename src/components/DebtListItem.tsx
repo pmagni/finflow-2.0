@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { Debt } from '../types';
 import { useStore } from '../store/useStore';
 import { formatCurrency, formatPercent } from '../utils/formatters';
