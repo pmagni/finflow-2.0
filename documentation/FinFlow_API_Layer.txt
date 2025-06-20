@@ -1,0 +1,98 @@
+
+# FinFlow API Layer Design
+
+## Base URL
+All endpoints are prefixed by: `/api/v1`
+
+---
+
+## Authentication
+### POST /auth/login
+- Input: { email, password }
+- Output: { token, user }
+
+### POST /auth/register
+- Input: { name, email, password }
+- Output: { token, user }
+
+### GET /auth/user
+- Header: Authorization: Bearer <token>
+- Output: { user }
+
+---
+
+## Users
+### GET /users/me
+- Output: { user_profile }
+
+### PUT /users/me
+- Input: { name, preferences }
+- Output: { updated_user }
+
+---
+
+## Organizations
+### POST /organizations
+- Input: { name }
+- Output: { organization }
+
+### GET /organizations/:id
+- Output: { organization, members }
+
+---
+
+## Debts
+### GET /debts
+- Output: [ { id, name, balance, interestRate, monthlyPayment, totalPayments } ]
+
+### POST /debts
+- Input: { name, balance, interestRate, monthlyPayment, totalPayments }
+- Output: { new_debt }
+
+### PUT /debts/:id
+- Input: { fields_to_update }
+- Output: { updated_debt }
+
+### DELETE /debts/:id
+- Output: { success }
+
+---
+
+## Debt Plans
+### GET /debt_plans
+- Output: { current_plan }
+
+### POST /debt_plans
+- Input: { user_id, income, budget_percentage, strategy }
+- Output: { plan }
+
+---
+
+## Transactions
+### GET /transactions
+- Output: [ { id, category, amount, date, description } ]
+
+### POST /transactions
+- Input: { category, amount, date, description }
+- Output: { new_transaction }
+
+---
+
+## Savings Goals
+### GET /savings
+- Output: [ { goal, target_amount, saved_amount } ]
+
+### POST /savings
+- Input: { goal, target_amount }
+- Output: { new_goal }
+
+---
+
+## AI Assistant
+### POST /ai/advise
+- Input: { user_context }
+- Output: { recommendation }
+
+## Admin
+### GET /admin/metrics
+- Output: { users_count, debts_total, etc. }

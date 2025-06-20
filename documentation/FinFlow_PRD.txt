@@ -1,0 +1,63 @@
+
+Product Requirements Document (PRD) — FinFlow
+
+Overview:
+FinFlow is a privacy-first, AI-powered financial wellness application designed to help users in Latin America manage debt, build smart budgets, and achieve savings goals. It replaces spreadsheets and data-sharing bank syncs with manual onboarding, personalized guidance, and motivational tools like gamification.
+
+Target User:
+- Individuals overwhelmed by financial debt and lacking structure to manage it.
+- Privacy-conscious users unwilling to connect banking data.
+- Users seeking actionable, easy-to-understand financial guidance.
+
+Core Functional Requirements:
+1. **Manual Debt & Income Entry**:
+   - Add/edit debts with amount, rate, term, institution.
+   - Input monthly income and essential expenses.
+
+2. **Smart Payment Plan Generation**:
+   - Apply snowball/avalanche strategies.
+   - Generate visual payoff timeline, interest saved, and monthly payment breakdown.
+
+3. **Budget Builder**:
+   - Allocate funds to debts, expenses, savings, and leisure.
+   - Suggest optimal percentages and adjust based on behavior.
+
+4. **AI Financial Assistant**:
+   - Connected via Webhook to OpenAI API.
+   - Offers explanations, financial planning, and motivational nudges.
+
+5. **Savings Goals**:
+   - Create savings goals and track progress monthly.
+
+6. **Gamification Engine**:
+   - Points, badges, savings streaks.
+   - Score-based financial health indicator.
+
+7. **Education Layer**:
+   - Onboarding tutorials and contextual explanations.
+   - Financial literacy modules and infographics.
+
+8. **User Accounts & Organizations**:
+   - Multi-organization support (e.g., family or couples budgets).
+   - Personal and shared views.
+
+Tech Stack:
+- **Frontend**: React + TailwindCSS (Vite + TypeScript)
+- **Backend**: Supabase (PostgreSQL + Auth)
+- **AI Integration**: Webhook to OpenAI (for GPT-4o or gpt-4-turbo)
+- **Automation & ETL**: n8n (for email reminders, alerts)
+- **Hosting**: Vercel or Netlify (frontend), Supabase (backend)
+
+Enterprise-Level Database Schema:
+1. `users`: Auth & profile
+2. `organizations`: Grouping of users (shared budgets)
+3. `user_organization_roles`: user ↔ org mapping + role
+4. `debt_plans`: Each user/org can have multiple
+5. `debts`: Belongs to a debt_plan
+6. `transactions`: Manual entry, optional
+7. `savings_goals`: Linked to users or orgs
+8. `budget_snapshots`: Monthly snapshots of budget allocation
+9. `ai_sessions`: Log of AI assistant prompts and responses
+10. `gamification_events`: Store milestones, badges, XP
+11. `education_modules`: Track user progress in literacy
+
