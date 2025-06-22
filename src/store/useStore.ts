@@ -2,27 +2,32 @@ import { create } from 'zustand';
 import type { User } from '@supabase/supabase-js';
 import type { Debt, Budget, SavingsGoal, Achievement, FinancialHealthScore } from '../types';
 import { debtsApi, savingsGoalsApi, gamificationApi } from '../services/api';
+import { produce } from 'immer';
 
 interface DebtState {
   debts: Debt[];
   loading: boolean;
   error: string | null;
-  fetchDebts: () => Promise<void>;
-  addDebt: (debt: Omit<Debt, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
-  updateDebt: (id: string, updates: Partial<Debt>) => Promise<void>;
-  deleteDebt: (id: string) => Promise<void>;
-  addFunds: (id: string, amount: number) => Promise<void>;
+  actions: {
+    fetchDebts: () => Promise<void>;
+    addDebt: (debt: Omit<Debt, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
+    updateDebt: (id: string, updates: Partial<Debt>) => Promise<void>;
+    deleteDebt: (id: string) => Promise<void>;
+    addFunds: (id: string, amount: number) => Promise<void>;
+  }
 }
 
 interface SavingsGoalState {
   goals: SavingsGoal[];
   loading: boolean;
   error: string | null;
-  fetchGoals: () => Promise<void>;
-  addGoal: (goal: Omit<SavingsGoal, 'id' | 'user_id' | 'created_at' | 'current_amount'>) => Promise<void>;
-  updateGoal: (id: string, updates: Partial<SavingsGoal>) => Promise<void>;
-  deleteGoal: (id: string) => Promise<void>;
-  addFunds: (id: string, amount: number) => Promise<void>;
+  actions: {
+    fetchGoals: () => Promise<void>;
+    addGoal: (goal: Omit<SavingsGoal, 'id' | 'user_id' | 'created_at' | 'current_amount'>) => Promise<void>;
+    updateGoal: (id: string, updates: Partial<SavingsGoal>) => Promise<void>;
+    deleteGoal: (id: string) => Promise<void>;
+    addFunds: (id: string, amount: number) => Promise<void>;
+  }
 }
 
 interface GamificationState {
@@ -56,70 +61,58 @@ export const useStore = create<AppState>((set, get) => ({
     debts: [],
     loading: false,
     error: null,
-    fetchDebts: async () => {
-      set(state => ({ debtState: { ...state.debtState, loading: true, error: null } }));
-      const { data, error } = await debtsApi.getDebts();
-      set(state => ({
-        debtState: {
-          ...state.debtState,
-          debts: data || [],
-          loading: false,
-          error: error,
-        },
-      }));
-    },
-    addDebt: async (newDebt) => {
-      set(state => ({ debtState: { ...state.debtState, loading: true } }));
-      const { data, error } = await debtsApi.createDebt(newDebt);
-      if (data) {
-        set(state => ({
-          debtState: {
-            ...state.debtState,
-            debts: [...state.debtState.debts, data],
-            loading: false,
-          },
+    actions: {
+      fetchDebts: async () => {
+        set(produce((state: AppState) => { state.debtState.loading = true; state.debtState.error = null; }));
+        const { data, error } = await debtsApi.getDebts();
+        set(produce((state: AppState) => {
+          state.debtState.debts = data || [];
+          state.debtState.loading = false;
+          state.debtState.error = error;
         }));
-      } else {
-        set(state => ({ debtState: { ...state.debtState, error: error, loading: false } }));
-      }
-    },
-    updateDebt: async (id, updates) => {
-        set(state => ({ debtState: { ...state.debtState, loading: true } }));
+      },
+      addDebt: async (newDebt) => {
+        set(produce((state: AppState) => { state.debtState.loading = true; }));
+        const { data, error } = await debtsApi.createDebt(newDebt);
+        set(produce((state: AppState) => {
+          if (data) {
+            state.debtState.debts.push(data);
+          }
+          state.debtState.error = error;
+          state.debtState.loading = false;
+        }));
+      },
+      updateDebt: async (id, updates) => {
+        set(produce((state: AppState) => { state.debtState.loading = true; }));
         const { data, error } = await debtsApi.updateDebt(id, updates);
-        if (data) {
-            set(state => ({
-                debtState: {
-                    ...state.debtState,
-                    debts: state.debtState.debts.map(d => d.id === id ? data : d),
-                    loading: false,
-                },
-            }));
-        } else {
-            set(state => ({ debtState: { ...state.debtState, error: error, loading: false } }));
-        }
-    },
-    deleteDebt: async (id: string) => {
-      set(state => ({ debtState: { ...state.debtState, loading: true } }));
-      const { error } = await debtsApi.deleteDebt(id);
-      if (!error) {
-        set(state => ({
-          debtState: {
-            ...state.debtState,
-            debts: state.debtState.debts.filter(d => d.id !== id),
-            loading: false,
-          },
+        set(produce((state: AppState) => {
+          if (data) {
+            const index = state.debtState.debts.findIndex((d: Debt) => d.id === id);
+            if (index !== -1) state.debtState.debts[index] = data;
+          }
+          state.debtState.error = error;
+          state.debtState.loading = false;
         }));
-      } else {
-        set(state => ({ debtState: { ...state.debtState, error: error, loading: false } }));
-      }
-    },
-    addFunds: async (id, amount) => {
-      const goal = get().savingsGoalState.goals.find(g => g.id === id);
-      if (!goal) return;
-      
-      const newCurrentAmount = (goal.current_amount || 0) + amount;
-      await get().savingsGoalState.updateGoal(id, { current_amount: newCurrentAmount });
-    },
+      },
+      deleteDebt: async (id: string) => {
+        set(produce((state: AppState) => { state.debtState.loading = true; }));
+        const { error } = await debtsApi.deleteDebt(id);
+        set(produce((state: AppState) => {
+          if (!error) {
+            state.debtState.debts = state.debtState.debts.filter((d: Debt) => d.id !== id);
+          }
+          state.debtState.error = error;
+          state.debtState.loading = false;
+        }));
+      },
+      addFunds: async (id, amount) => {
+        const goal = get().savingsGoalState.goals.find(g => g.id === id);
+        if (!goal) return;
+        
+        const newCurrentAmount = (goal.current_amount || 0) + amount;
+        await get().savingsGoalState.actions.updateGoal(id, { current_amount: newCurrentAmount });
+      },
+    }
   },
 
   // Savings Goals state & actions
@@ -127,70 +120,58 @@ export const useStore = create<AppState>((set, get) => ({
     goals: [],
     loading: false,
     error: null,
-    fetchGoals: async () => {
-      set(state => ({ savingsGoalState: { ...state.savingsGoalState, loading: true, error: null } }));
-      const { data, error } = await savingsGoalsApi.getSavingsGoals();
-      set(state => ({
-        savingsGoalState: {
-          ...state.savingsGoalState,
-          goals: data || [],
-          loading: false,
-          error: error,
-        },
-      }));
-    },
-    addGoal: async (newGoal) => {
-      set(state => ({ savingsGoalState: { ...state.savingsGoalState, loading: true } }));
-      const { data, error } = await savingsGoalsApi.createSavingsGoal(newGoal);
-      if (data) {
-        set(state => ({
-          savingsGoalState: {
-            ...state.savingsGoalState,
-            goals: [...state.savingsGoalState.goals, data],
-            loading: false,
-          },
+    actions: {
+      fetchGoals: async () => {
+        set(produce((state: AppState) => { state.savingsGoalState.loading = true; state.savingsGoalState.error = null; }));
+        const { data, error } = await savingsGoalsApi.getSavingsGoals();
+        set(produce((state: AppState) => {
+          state.savingsGoalState.goals = data || [];
+          state.savingsGoalState.loading = false;
+          state.savingsGoalState.error = error;
         }));
-      } else {
-        set(state => ({ savingsGoalState: { ...state.savingsGoalState, error: error, loading: false } }));
-      }
-    },
-    updateGoal: async (id, updates) => {
-      set(state => ({ savingsGoalState: { ...state.savingsGoalState, loading: true } }));
-      const { data, error } = await savingsGoalsApi.updateSavingsGoal(id, updates);
-      if (data) {
-        set(state => ({
-          savingsGoalState: {
-            ...state.savingsGoalState,
-            goals: state.savingsGoalState.goals.map(g => g.id === id ? data : g),
-            loading: false,
-          },
+      },
+      addGoal: async (newGoal) => {
+        set(produce((state: AppState) => { state.savingsGoalState.loading = true; }));
+        const { data, error } = await savingsGoalsApi.createSavingsGoal(newGoal);
+        set(produce((state: AppState) => {
+          if (data) {
+            state.savingsGoalState.goals.push(data);
+          }
+          state.savingsGoalState.error = error;
+          state.savingsGoalState.loading = false;
         }));
-      } else {
-        set(state => ({ savingsGoalState: { ...state.savingsGoalState, error: error, loading: false } }));
-      }
-    },
-    deleteGoal: async (id) => {
-      set(state => ({ savingsGoalState: { ...state.savingsGoalState, loading: true } }));
-      const { error } = await savingsGoalsApi.deleteSavingsGoal(id);
-      if (!error) {
-        set(state => ({
-          savingsGoalState: {
-            ...state.savingsGoalState,
-            goals: state.savingsGoalState.goals.filter(g => g.id !== id),
-            loading: false,
-          },
+      },
+      updateGoal: async (id, updates) => {
+        set(produce((state: AppState) => { state.savingsGoalState.loading = true; }));
+        const { data, error } = await savingsGoalsApi.updateSavingsGoal(id, updates);
+        set(produce((state: AppState) => {
+          if (data) {
+            const index = state.savingsGoalState.goals.findIndex((g: SavingsGoal) => g.id === id);
+            if (index !== -1) state.savingsGoalState.goals[index] = data;
+          }
+          state.savingsGoalState.error = error;
+          state.savingsGoalState.loading = false;
         }));
-      } else {
-        set(state => ({ savingsGoalState: { ...state.savingsGoalState, error: error, loading: false } }));
-      }
-    },
-    addFunds: async (id, amount) => {
-      const goal = get().savingsGoalState.goals.find(g => g.id === id);
-      if (!goal) return;
-      
-      const newCurrentAmount = (goal.current_amount || 0) + amount;
-      await get().savingsGoalState.updateGoal(id, { current_amount: newCurrentAmount });
-    },
+      },
+      deleteGoal: async (id) => {
+        set(produce((state: AppState) => { state.savingsGoalState.loading = true; }));
+        const { error } = await savingsGoalsApi.deleteSavingsGoal(id);
+        set(produce((state: AppState) => {
+          if (!error) {
+            state.savingsGoalState.goals = state.savingsGoalState.goals.filter((g: SavingsGoal) => g.id !== id);
+          }
+          state.savingsGoalState.error = error;
+          state.savingsGoalState.loading = false;
+        }));
+      },
+      addFunds: async (id, amount) => {
+        const goal = get().savingsGoalState.goals.find(g => g.id === id);
+        if (!goal) return;
+        
+        const newCurrentAmount = (goal.current_amount || 0) + amount;
+        await get().savingsGoalState.actions.updateGoal(id, { current_amount: newCurrentAmount });
+      },
+    }
   },
 
   // Gamification state & actions

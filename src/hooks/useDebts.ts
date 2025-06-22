@@ -4,16 +4,16 @@ import { useAuth } from '../context/AuthContext';
 
 export const useDebts = () => {
   const { user } = useAuth();
-  const { debtState, fetchDebts } = useStore(state => ({
+  const { debtState, actions } = useStore(state => ({
     debtState: state.debtState,
-    fetchDebts: state.debtState.fetchDebts,
+    actions: state.debtState.actions,
   }));
 
   useEffect(() => {
     if (user) {
-      fetchDebts();
+      actions.fetchDebts();
     }
-  }, [user, fetchDebts]);
+  }, [user, actions]);
 
   return debtState;
 }; 

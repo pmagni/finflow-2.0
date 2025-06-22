@@ -1,9 +1,20 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-background: #0E1111;
+  --color-container: #191D1D;
+  --color-primary: #2AF5C1;
+  --color-light-gray: #C4C4C4;
+  --color-error: #EF4444;
+  --color-dark-primary: #1a1a2e;
+  --color-dark-secondary: #16213e;
+  --color-dark-accent: #0f3460;
+  --color-dark-text: #e94560;
+  --color-dark-light-text: #dcdcdc;
+}
 
 @layer base {
   body {
-    @apply bg-darkPrimary text-darkLightText;
+    @apply bg-dark-primary text-dark-light-text;
   }
 }
