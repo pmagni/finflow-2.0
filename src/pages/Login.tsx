@@ -8,18 +8,29 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSigningUp, setIsSigningUp] = useState(false);
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleAuthAction = async () => {
-    if (isSigningUp) {
-      console.log("Signing up with:", email);
-    } else {
-      const { error } = await signIn(email, password);
-      if (!error) {
-        navigate('/');
+    setError("");
+    setIsSubmitting(true);
+    
+    try {
+      if (isSigningUp) {
+        console.log("Signing up with:", email);
       } else {
-        alert(`Login failed: ${error}`);
+        const { error: authError } = await signIn(email, password);
+        if (!authError) {
+          navigate('/');
+        } else {
+          setError("Credenciales de inicio de sesión inválidas. Por favor, verifica tu correo y contraseña.");
+        }
       }
+    } catch (err) {
+      setError("Ocurrió un error inesperado. Por favor, intenta de nuevo.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -57,6 +68,20 @@ export default function Login() {
             <h2>{isSigningUp ? 'Crear Cuenta' : 'Bienvenido de Vuelta'}</h2>
           </div>
           
+          {error && (
+            <div style={{
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: '0.375rem',
+              padding: '0.75rem',
+              marginBottom: '1rem',
+              color: '#dc2626',
+              fontSize: '0.875rem'
+            }}>
+              {error}
+            </div>
+          )}
+          
           <form className="some-component" onSubmit={(e) => { e.preventDefault(); handleAuthAction(); }}>
             <div className="form-group">
               <label htmlFor="email" className="form-label">Correo Electrónico</label>
@@ -70,6 +95,7 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="form-input"
                 placeholder="tu@email.com"
+                disabled={isSubmitting}
               />
             </div>
             
@@ -85,18 +111,27 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="form-input"
                 placeholder="••••••••"
+                disabled={isSubmitting}
               />
             </div>
             
-            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-              {isSigningUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
+            <button 
+              type="submit" 
+              className="btn btn-primary" 
+              style={{ width: '100%' }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Procesando...' : (isSigningUp ? 'Crear Cuenta' : 'Iniciar Sesión')}
             </button>
           </form>
           
           <p className="text-center" style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: '#6b7280' }}>
             {isSigningUp ? '¿Ya tienes una cuenta?' : "¿No tienes una cuenta?"}
             <button 
-              onClick={() => setIsSigningUp(!isSigningUp)} 
+              onClick={() => {
+                setIsSigningUp(!isSigningUp);
+                setError("");
+              }}
               style={{ 
                 marginLeft: '0.25rem', 
                 fontWeight: '500', 
@@ -106,6 +141,7 @@ export default function Login() {
                 cursor: 'pointer',
                 textDecoration: 'underline'
               }}
+              disabled={isSubmitting}
             >
               {isSigningUp ? 'Iniciar Sesión' : 'Crear Cuenta'}
             </button>
