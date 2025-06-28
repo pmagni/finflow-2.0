@@ -3,6 +3,7 @@ import { useBudget } from '../hooks/useBudget';
 import { formatCurrency } from '../utils/formatters';
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import Card from '../components/Card';
 import 'chart.js/auto';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -28,7 +29,6 @@ export default function Budget() {
       setVariableExpenses(String(budget.variable_expenses || ''));
       setSavingsGoal(String(budget.savings_goal || ''));
     } else {
-      // Reset form if no budget for the month
       setIncome('');
       setFixedExpenses('');
       setVariableExpenses('');
@@ -44,7 +44,6 @@ export default function Budget() {
       fixed_expenses: parseFloat(fixedExpenses) || 0,
       variable_expenses: parseFloat(variableExpenses) || 0,
       savings_goal: parseFloat(savingsGoal) || 0,
-      // Discretionary spend is calculated, not set by user
       discretionary_spend: (parseFloat(income) || 0) - ((parseFloat(fixedExpenses) || 0) + (parseFloat(variableExpenses) || 0) + (parseFloat(savingsGoal) || 0)),
     };
     saveBudget(budgetData);
@@ -54,13 +53,13 @@ export default function Budget() {
   const remaining = (parseFloat(income) || 0) - totalExpenses - (parseFloat(savingsGoal) || 0);
 
   const chartData = {
-    labels: ['Fixed Expenses', 'Variable Expenses', 'Savings Goal', 'Remaining'],
+    labels: ['Gastos Fijos', 'Gastos Variables', 'Meta de Ahorro', 'Restante'],
     datasets: [{
       data: [
         parseFloat(fixedExpenses) || 0,
         parseFloat(variableExpenses) || 0,
         parseFloat(savingsGoal) || 0,
-        Math.max(0, remaining) // Don't show negative values in chart
+        Math.max(0, remaining)
       ],
       backgroundColor: ['#EF4444', '#F59E0B', '#10B981', '#3B82F6'],
       hoverBackgroundColor: ['#DC2626', '#D97706', '#059669', '#2563EB'],
@@ -70,50 +69,55 @@ export default function Budget() {
   };
   
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div>
+      <div className="flex justify-between items-center mb-4">
         <div>
-          <h1 className="text-3xl font-bold">Monthly Budget</h1>
-          <p className="text-gray-500">Manage your budget for {new Date(currentMonth + '-02').toLocaleString('default', { month: 'long', year: 'numeric' })}.</p>
+          <h1>Presupuesto Mensual</h1>
+          <p>Gestiona tu presupuesto para {new Date(currentMonth + '-02').toLocaleString('default', { month: 'long', year: 'numeric' })}.</p>
         </div>
       </div>
 
-      {loading && <p>Loading budget...</p>}
-      {error && <p className="text-red-500">Error: {error}</p>}
+      {loading && <p>Cargando presupuesto...</p>}
+      {error && <p style={{ color: '#ef4444' }}>Error: {error}</p>}
 
       {!loading && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-white p-8 rounded-lg shadow-md">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <BudgetInput label="Monthly Income" value={income} onChange={setIncome} />
-              <BudgetInput label="Fixed Expenses" value={fixedExpenses} onChange={setFixedExpenses} />
-              <BudgetInput label="Variable Expenses" value={variableExpenses} onChange={setVariableExpenses} />
-              <BudgetInput label="Savings Goal" value={savingsGoal} onChange={setSavingsGoal} />
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition"
-                >
-                  Save Budget
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+          <Card title="Configurar Presupuesto">
+            <form onSubmit={handleSubmit} className="some-component">
+              <BudgetInput label="Ingresos Mensuales" value={income} onChange={setIncome} />
+              <BudgetInput label="Gastos Fijos" value={fixedExpenses} onChange={setFixedExpenses} />
+              <BudgetInput label="Gastos Variables" value={variableExpenses} onChange={setVariableExpenses} />
+              <BudgetInput label="Meta de Ahorro" value={savingsGoal} onChange={setSavingsGoal} />
+              <div style={{ paddingTop: '1rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                  Guardar Presupuesto
                 </button>
               </div>
             </form>
-          </div>
+          </Card>
 
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-bold mb-4 text-center">Budget Breakdown</h3>
-              <div className="w-full max-w-xs mx-auto">
+          <div className="flex flex-col gap-4">
+            <Card title="Distribución del Presupuesto">
+              <div style={{ width: '100%', maxWidth: '300px', margin: '0 auto' }}>
                 <Doughnut data={chartData} />
               </div>
-            </div>
-             <div className="bg-white p-6 rounded-lg shadow-md text-center">
-                <h3 className="text-lg font-bold">Discretionary Spend</h3>
-                <p className={`text-4xl font-bold mt-2 ${remaining < 0 ? 'text-red-500' : 'text-green-500'}`}>
+            </Card>
+            
+            <Card title="Dinero Disponible">
+              <div className="text-center">
+                <p style={{ 
+                  fontSize: '2.5rem', 
+                  fontWeight: 'bold', 
+                  margin: '0.5rem 0',
+                  color: remaining < 0 ? '#ef4444' : '#10b981'
+                }}>
                   {formatCurrency(remaining)}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">left for the month</p>
-            </div>
+                <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0 }}>
+                  restante para el mes
+                </p>
+              </div>
+            </Card>
           </div>
         </div>
       )}
@@ -122,17 +126,23 @@ export default function Budget() {
 }
 
 const BudgetInput = ({ label, value, onChange }: { label: string, value: string, onChange: (value: string) => void }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700">{label}</label>
-    <div className="mt-1 relative rounded-md shadow-sm">
-      <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-        <span className="text-gray-500 sm:text-sm">$</span>
-      </div>
+  <div className="form-group">
+    <label className="form-label">{label}</label>
+    <div style={{ position: 'relative' }}>
+      <span style={{ 
+        position: 'absolute', 
+        left: '0.75rem', 
+        top: '50%', 
+        transform: 'translateY(-50%)',
+        color: '#6b7280',
+        pointerEvents: 'none'
+      }}>$</span>
       <input
         type="number"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="block w-full rounded-md border-gray-300 pl-7 pr-2 focus:border-indigo-500 focus:ring-indigo-500"
+        className="form-input"
+        style={{ paddingLeft: '2rem' }}
         placeholder="0.00"
       />
     </div>

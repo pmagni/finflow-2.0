@@ -5,12 +5,13 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Send, Bot, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Card from '../components/Card';
 
 export default function Chat() {
   const { messages, loading, error, sendMessage } = useChat();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth(); // To display user avatar/initials
+  const { user } = useAuth();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -27,41 +28,60 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] bg-white rounded-lg shadow-md">
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {messages.map((message, index) => (
-          <ChatMessageItem key={index} message={message} user={user} />
-        ))}
-        {loading && messages[messages.length - 1]?.role === 'assistant' && (
-          <div className="flex justify-start items-end gap-3">
-            <Bot className="w-8 h-8 text-indigo-500" />
-            <div className="bg-gray-100 p-4 rounded-lg max-w-2xl animate-pulse">
-              <span className="w-4 h-4 bg-gray-300 rounded-full inline-block"></span>
+    <div>
+      <h1>Asistente Financiero IA</h1>
+      <p>Pregúntame cualquier cosa sobre tus finanzas personales.</p>
+      
+      <Card style={{ height: 'calc(100vh - 300px)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {messages.map((message, index) => (
+            <ChatMessageItem key={index} message={message} user={user} />
+          ))}
+          {loading && messages[messages.length - 1]?.role === 'assistant' && (
+            <div className="flex items-end gap-3">
+              <Bot size={32} style={{ color: '#3b82f6' }} />
+              <div style={{ 
+                backgroundColor: '#f3f4f6', 
+                padding: '1rem', 
+                borderRadius: '0.5rem', 
+                maxWidth: '70%' 
+              }}>
+                <div style={{ 
+                  width: '1rem', 
+                  height: '1rem', 
+                  backgroundColor: '#d1d5db', 
+                  borderRadius: '50%', 
+                  animation: 'pulse 1.5s infinite' 
+                }}></div>
+              </div>
             </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-      <div className="p-4 border-t">
-        {error && <p className="text-red-500 text-sm mb-2 text-center">{error}</p>}
-        <form onSubmit={handleSendMessage} className="flex items-center gap-4">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask your financial question..."
-            className="flex-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            disabled={loading}
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="p-3 bg-indigo-600 text-white rounded-lg shadow disabled:bg-indigo-300 hover:bg-indigo-700 transition"
-          >
-            <Send size={24} />
-          </button>
-        </form>
-      </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+        
+        <div style={{ padding: '1rem', borderTop: '1px solid #e5e7eb' }}>
+          {error && <p style={{ color: '#ef4444', fontSize: '0.9rem', marginBottom: '0.5rem', textAlign: 'center' }}>{error}</p>}
+          <form onSubmit={handleSendMessage} className="flex items-center gap-4">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Pregunta sobre tus finanzas..."
+              className="form-input"
+              disabled={loading}
+              style={{ flex: 1 }}
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary"
+              style={{ padding: '0.75rem' }}
+            >
+              <Send size={20} />
+            </button>
+          </form>
+        </div>
+      </Card>
     </div>
   );
 }
@@ -69,29 +89,43 @@ export default function Chat() {
 const ChatMessageItem = ({ message, user }: { message: ChatMessage; user: any }) => {
   const isUser = message.role === 'user';
   return (
-    <div className={`flex items-end gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
-      {!isUser && <Bot className="w-8 h-8 text-indigo-500 flex-shrink-0" />}
+    <div className={`flex items-end gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
+      {!isUser ? (
+        <Bot size={32} style={{ color: '#3b82f6' }} />
+      ) : (
+        <div style={{
+          width: '32px',
+          height: '32px',
+          backgroundColor: '#e5e7eb',
+          color: '#6b7280',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 'bold',
+          flexShrink: 0
+        }}>
+          {user?.email?.[0]?.toUpperCase() || <User size={20} />}
+        </div>
+      )}
       <div
-        className={`p-4 rounded-lg max-w-2xl ${
-          isUser
-            ? 'bg-indigo-500 text-white'
-            : 'bg-gray-100 text-gray-800'
-        }`}
+        style={{
+          padding: '1rem',
+          borderRadius: '0.5rem',
+          maxWidth: '70%',
+          backgroundColor: isUser ? '#3b82f6' : '#f3f4f6',
+          color: isUser ? 'white' : '#1f2937'
+        }}
       >
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
-            p: ({node, ...props}) => <p className="prose prose-sm max-w-none" {...props} />
+            p: ({node, ...props}) => <p style={{ margin: 0, lineHeight: 1.5 }} {...props} />
           }}
         >
           {message.content}
         </ReactMarkdown>
       </div>
-      {isUser && (
-        <div className="w-8 h-8 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center font-bold flex-shrink-0">
-          {user?.email?.[0]?.toUpperCase() || <User size={20} />}
-        </div>
-      )}
     </div>
   );
 };

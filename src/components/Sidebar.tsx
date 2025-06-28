@@ -7,7 +7,8 @@ import {
   FiBookOpen,
   FiTrendingUp,
   FiLogOut,
-  FiUser
+  FiUser,
+  FiMessageCircle
 } from "react-icons/fi";
 
 const navLinks = [
@@ -15,6 +16,7 @@ const navLinks = [
   { to: "/debts", text: "Plan de Deudas", icon: FiTrendingUp },
   { to: "/budget", text: "Presupuesto", icon: FiPieChart },
   { to: "/savings", text: "Metas de Ahorro", icon: FiTarget },
+  { to: "/chat", text: "Chat IA", icon: FiMessageCircle },
   { to: "/challenges", text: "Retos", icon: FiBookOpen },
   { to: "/education", text: "Educación", icon: FiBookOpen },
 ];
@@ -29,45 +31,66 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-darkSecondary text-darkLightText flex flex-col p-4">
-      <div className="text-2xl font-bold mb-10">FinFlow</div>
-      <nav className="flex-1">
-        <ul>
+    <aside className="sidebar">
+      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#61dafb' }}>
+        FinFlow
+      </div>
+      <nav style={{ flex: 1 }}>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {navLinks.map((link) => (
-            <li key={link.to}>
+            <li key={link.to} style={{ marginBottom: '0.5rem' }}>
               <NavLink
                 to={link.to}
                 className={({ isActive }) =>
-                  `flex items-center p-2 my-2 rounded-lg transition-colors ${
+                  `flex items-center gap-3 p-3 rounded-lg transition-colors text-decoration-none ${
                     isActive
-                      ? "bg-darkAccent text-white"
-                      : "hover:bg-darkAccent"
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-300 hover:bg-gray-700"
                   }`
                 }
+                style={({ isActive }) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '0.75rem',
+                  borderRadius: '0.5rem',
+                  textDecoration: 'none',
+                  color: isActive ? 'white' : '#d1d5db',
+                  backgroundColor: isActive ? '#3b82f6' : 'transparent',
+                  transition: 'all 0.2s'
+                })}
               >
-                <link.icon className="mr-3" />
+                <link.icon size={20} />
                 {link.text}
               </NavLink>
             </li>
           ))}
         </ul>
       </nav>
-      <div className="mt-auto">
-        <div className="p-2 flex items-center">
-          <FiUser className="mr-3" />
+      <div style={{ marginTop: 'auto', paddingTop: '2rem' }}>
+        <div style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <FiUser size={20} />
           <div>
-            <p className="font-semibold">Usuario</p>
-            <p className="text-xs text-gray-400">{user?.email}</p>
+            <p style={{ fontWeight: '600', margin: 0, fontSize: '0.9rem' }}>Usuario</p>
+            <p style={{ fontSize: '0.75rem', color: '#9ca3af', margin: 0 }}>{user?.email}</p>
           </div>
         </div>
         <button
           onClick={handleSignOut}
-          className="w-full flex items-center p-2 mt-2 text-left rounded-lg hover:bg-darkAccent"
+          className="btn btn-danger"
+          style={{ 
+            width: '100%', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.75rem',
+            justifyContent: 'center',
+            marginTop: '0.5rem'
+          }}
         >
-          <FiLogOut className="mr-3" />
+          <FiLogOut size={16} />
           Cerrar sesión
         </button>
       </div>
     </aside>
   );
-} 
+}

@@ -3,14 +3,20 @@ import React from 'react';
 type CardProps = {
   children?: React.ReactNode;
   className?: string;
+  title?: string;
 };
 
-const Card: React.FC<CardProps> = ({ children, className = '' }) => {
+const Card: React.FC<CardProps> = ({ children, className = '', title }) => {
   return (
-    <div className={`bg-gray-900 rounded-lg shadow-lg p-4 md:p-6 ${className}`}>
+    <div className={`card ${className}`}>
+      {title && (
+        <div className="card-header">
+          <h3 className="card-title">{title}</h3>
+        </div>
+      )}
       {children}
     </div>
   );
 };
 
-export default Card; 
+export default Card;

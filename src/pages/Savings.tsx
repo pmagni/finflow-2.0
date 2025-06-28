@@ -16,23 +16,23 @@ export default function Savings() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div>
+      <div className="flex justify-between items-center mb-4">
         <div>
-          <h1 className="text-3xl font-bold">Savings Goals</h1>
-          <p className="text-gray-500">Set and track your financial goals.</p>
+          <h1>Metas de Ahorro</h1>
+          <p>Establece y rastrea tus objetivos financieros.</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition"
+          className="btn btn-primary flex items-center gap-2"
         >
           <PlusCircle size={20} />
-          Set New Goal
+          Nueva Meta
         </button>
       </div>
 
-      {loading && <p>Loading goals...</p>}
-      {error && <p className="text-red-500">Error: {error}</p>}
+      {loading && <p>Cargando metas...</p>}
+      {error && <p style={{ color: '#ef4444' }}>Error: {error}</p>}
 
       {!loading && !error && (
         <SavingsGoalList goals={goals} />
@@ -46,4 +46,4 @@ export default function Savings() {
       )}
     </div>
   );
-} 
+}

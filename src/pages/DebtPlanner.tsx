@@ -7,6 +7,7 @@ import DebtList from '../components/DebtList';
 import DebtSummary from '../components/DebtSummary';
 import DebtStrategyForm from '../components/DebtStrategyForm';
 import PaymentTimeline from '../components/PaymentTimeline';
+import Card from '../components/Card';
 import { PlusCircle } from 'lucide-react';
 
 export default function DebtPlanner() {
@@ -31,36 +32,40 @@ export default function DebtPlanner() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div>
+      <div className="flex justify-between items-center mb-4">
         <div>
-          <h1 className="text-3xl font-bold">Debt Planner</h1>
-          <p className="text-gray-500">Manage your debts and create a plan to pay them off.</p>
+          <h1>Planificador de Deudas</h1>
+          <p>Gestiona tus deudas y crea un plan para pagarlas.</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition"
+          className="btn btn-primary flex items-center gap-2"
         >
           <PlusCircle size={20} />
-          Add Debt
+          Agregar Deuda
         </button>
       </div>
 
-      {debtsLoading && <p>Loading debts...</p>}
-      {debtsError && <p className="text-red-500">Error: {debtsError}</p>}
+      {debtsLoading && <p>Cargando deudas...</p>}
+      {debtsError && <p style={{ color: '#ef4444' }}>Error: {debtsError}</p>}
       
       {!debtsLoading && !debtsError && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+          <div className="debt-panel">
             <DebtSummary debts={debts} />
-            <DebtList debts={debts} />
+            <div style={{ marginTop: '2rem' }}>
+              <DebtList debts={debts} />
+            </div>
           </div>
-          <div className="lg:col-span-1">
-            <DebtStrategyForm onSubmit={handleStrategySubmit} loading={strategyLoading} />
-            {strategyError && <p className="text-red-500 mt-4">Error: {strategyError}</p>}
-            {strategyResult && (
-              <PaymentTimeline result={strategyResult} />
-            )}
+          <div>
+            <Card>
+              <DebtStrategyForm onSubmit={handleStrategySubmit} loading={strategyLoading} />
+              {strategyError && <p style={{ color: '#ef4444', marginTop: '1rem' }}>Error: {strategyError}</p>}
+              {strategyResult && (
+                <PaymentTimeline result={strategyResult} />
+              )}
+            </Card>
           </div>
         </div>
       )}
