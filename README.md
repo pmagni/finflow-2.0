@@ -1,54 +1,67 @@
-# React + TypeScript + Vite
+# FinFlow 2.0
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación web de bienestar financiero (React, Vite, TypeScript, Tailwind) con backend en **Supabase** (Auth + PostgreSQL + Edge Functions). Diseñada para usuarios que prefieren entrada manual y privacidad, alineada con el PRD en `documentation/FinFlow_PRD.txt`.
 
-Currently, two official plugins are available:
+## Requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 20+
+- Cuenta [Supabase](https://supabase.com) con proyecto vinculado
+- (Opcional) [n8n](https://n8n.io) para recordatorios y automatizaciones
 
-## Expanding the ESLint configuration
+## Variables de entorno
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Crea `.env` en la raíz (Vite expone solo prefijos permitidos; revisa `src/config/env.ts` y `src/services/supabase.ts`):
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+| Variable | Uso |
+|----------|-----|
+| `VITE_SUPABASE_URL` | URL del proyecto Supabase |
+| `VITE_SUPABASE_ANON_KEY` | Clave anónima (pública) |
+
+**Edge Functions** (panel Supabase → Edge Functions → Secrets):
+
+| Secreto | Uso |
+|---------|-----|
+| `OPENAI_API_KEY` | Asistente IA (`get-financial-advise`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Solo en servidor (p. ej. invitaciones); nunca en el frontend |
+
+## Base de datos
+
+Aplica migraciones en orden desde `supabase/migrations/` (CLI Supabase o SQL Editor), incluyendo:
+
+- Columnas PRD para deudas, presupuesto y planes de pago
+- Política RLS de `gamification_events` (inserción solo del propio usuario)
+- Seed de módulos de educación (`education_modules`)
+
+## Comandos
+
+```bash
+npm install
+npm run dev      # desarrollo
+npm run build    # producción
+npm run test     # Vitest
+npm run lint     # ESLint
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Despliegue
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **Frontend**: Vercel o Netlify; define `VITE_SUPABASE_*` en el panel del proveedor.
+- **Backend**: Supabase (Auth, DB, Storage si lo usas, Edge Functions desplegadas con `supabase functions deploy`).
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## n8n (recordatorios / alertas)
+
+El PRD menciona n8n para correos y recordatorios. No está acoplado al repo: configura flujos que:
+
+1. lean la API de Supabase (tablas `budgets`, `savings_goals`, etc.) con un rol limitado o webhooks, o
+2. reciban webhooks desde Edge Functions cuando implementes notificaciones.
+
+Documenta URLs y claves solo en tu instancia n8n o gestor de secretos.
+
+## Estructura relevante
+
+- `src/pages/` — pantallas (deudas, presupuesto, ahorros, chat IA, retos, educación, organizaciones, transacciones)
+- `src/services/api/` — clientes Supabase
+- `supabase/functions/` — IA y utilidades invitación
+
+## Licencia
+
+Ver `LICENSE`.

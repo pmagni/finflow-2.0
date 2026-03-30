@@ -1,20 +1,86 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #0E1111;
-  --color-container: #191D1D;
-  --color-primary: #2AF5C1;
-  --color-light-gray: #C4C4C4;
-  --color-error: #EF4444;
-  --color-dark-primary: #1a1a2e;
-  --color-dark-secondary: #16213e;
-  --color-dark-accent: #0f3460;
-  --color-dark-text: #e94560;
-  --color-dark-light-text: #dcdcdc;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+
+  /* Primary palette */
+  --color-primary-50: #EFF6FF;
+  --color-primary-100: #DBEAFE;
+  --color-primary-200: #BFDBFE;
+  --color-primary-300: #93C5FD;
+  --color-primary-400: #60A5FA;
+  --color-primary-500: #3B82F6;
+  --color-primary-600: #2563EB;
+  --color-primary-700: #1D4ED8;
+  --color-primary-800: #1E40AF;
+  --color-primary-900: #1E3A8A;
+
+  /* CTA / Accent (Orange) */
+  --color-accent-50: #FFF7ED;
+  --color-accent-100: #FFEDD5;
+  --color-accent-200: #FED7AA;
+  --color-accent-300: #FDBA74;
+  --color-accent-400: #FB923C;
+  --color-accent-500: #F97316;
+  --color-accent-600: #EA580C;
+  --color-accent-700: #C2410C;
+
+  /* Success (Green) */
+  --color-success-50: #F0FDF4;
+  --color-success-100: #DCFCE7;
+  --color-success-200: #BBF7D0;
+  --color-success-400: #4ADE80;
+  --color-success-500: #22C55E;
+  --color-success-600: #16A34A;
+  --color-success-700: #15803D;
+
+  /* Danger (Red) */
+  --color-danger-50: #FEF2F2;
+  --color-danger-100: #FEE2E2;
+  --color-danger-400: #F87171;
+  --color-danger-500: #EF4444;
+  --color-danger-600: #DC2626;
+  --color-danger-700: #B91C1C;
+
+  /* Warning (Yellow) */
+  --color-warning-50: #FFFBEB;
+  --color-warning-100: #FEF3C7;
+  --color-warning-400: #FBBF24;
+  --color-warning-500: #F59E0B;
+  --color-warning-600: #D97706;
+
+  /* Surfaces */
+  --color-surface-50: #F8FAFC;
+  --color-surface-100: #F1F5F9;
+  --color-surface-200: #E2E8F0;
+  --color-surface-300: #CBD5E1;
+  --color-surface-400: #94A3B8;
+  --color-surface-500: #64748B;
+  --color-surface-600: #475569;
+  --color-surface-700: #334155;
+  --color-surface-800: #1E293B;
+  --color-surface-900: #0F172A;
 }
 
 @layer base {
   body {
-    @apply bg-dark-primary text-dark-light-text;
+    @apply bg-surface-50 text-surface-800 font-sans;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-surface-300) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--color-surface-300);
+    border-radius: 3px;
   }
 }

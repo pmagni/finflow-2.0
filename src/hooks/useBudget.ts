@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { budgetsApi } from '../services/api';
+import { budgetsApi, budgetSnapshotsApi } from '../services/api';
 import type { Budget } from '../types';
 import { useAuth } from '../context/AuthContext';
 
@@ -33,12 +33,25 @@ export const useBudget = (month: string) => {
       setError(apiError);
       setLoading(false);
       return null;
-    } else {
-      setBudget(data);
-      setLoading(false);
-      setError(null);
-      return data;
     }
+    setBudget(data);
+    setLoading(false);
+    setError(null);
+
+    const snapErr = await budgetSnapshotsApi.createFromBudget(
+      budgetData.month,
+      { ...budgetData },
+      {
+        total_income: budgetData.income,
+        total_expenses: budgetData.fixed_expenses + budgetData.variable_expenses,
+        total_savings: budgetData.savings_goal,
+      },
+    );
+    if (snapErr.error) {
+      console.warn('Budget snapshot:', snapErr.error);
+    }
+
+    return data;
   };
 
   return { budget, loading, error, saveBudget, refetch: fetchBudget };

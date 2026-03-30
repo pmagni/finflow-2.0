@@ -5,5 +5,12 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+      },
+    },
+  },
   plugins: [],
-} 
+}

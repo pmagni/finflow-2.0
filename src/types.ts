@@ -27,6 +27,8 @@ export type Debt = {
   balance: number;
   interest_rate?: number;
   minimum_payment?: number;
+  institution?: string | null;
+  term_months?: number | null;
   created_at: string;
 };
 
@@ -37,6 +39,7 @@ export type DebtPlan = {
   monthly_income: number;
   budget_percentage: number;
   payment_strategy: 'avalanche' | 'snowball';
+  extra_monthly_payment?: number | null;
   is_active: boolean;
   created_at: string;
 };
@@ -59,6 +62,8 @@ export type Budget = {
   variable_expenses: number;
   savings_goal: number;
   discretionary_spend: number;
+  debt_payment_allocation?: number | null;
+  leisure_allocation?: number | null;
   created_at: string;
 };
 

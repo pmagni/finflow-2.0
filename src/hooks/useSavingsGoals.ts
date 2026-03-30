@@ -6,7 +6,7 @@ export const useSavingsGoals = () => {
   const { user } = useAuth();
   const { savingsGoalState, fetchGoals } = useStore(state => ({
     savingsGoalState: state.savingsGoalState,
-    fetchGoals: state.savingsGoalState.fetchGoals,
+    fetchGoals: state.savingsGoalState.actions.fetchGoals,
   }));
 
   useEffect(() => {

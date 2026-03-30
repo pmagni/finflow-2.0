@@ -4,6 +4,9 @@ import type { Organization, OrganizationMembership } from '../types';
 export const organizationService = {
   // Create a new organization
   async createOrganization(name: string): Promise<{ data?: Organization; error?: string }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'User not authenticated' };
+
     const { data, error } = await supabase
       .from('organizations')
       .insert({ name })
@@ -12,11 +15,11 @@ export const organizationService = {
 
     if (error) return { error: error.message };
 
-    // Add the creator as admin
     const { error: membershipError } = await supabase
       .from('organization_memberships')
       .insert({
         organization_id: data.id,
+        user_id: user.id,
         role: 'admin',
       });
 
@@ -25,17 +28,31 @@ export const organizationService = {
     return { data };
   },
 
-  // Get user's organizations
   async getUserOrganizations(): Promise<{ data?: Organization[]; error?: string }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { data: [], error: undefined };
+
     const { data, error } = await supabase
-      .from('organizations')
-      .select(`
-        *,
-        organization_memberships!inner(user_id)
-      `);
+      .from('organization_memberships')
+      .select('organization_id, organizations(*)')
+      .eq('user_id', user.id);
 
     if (error) return { error: error.message };
-    return { data };
+
+    type Row = { organizations: Organization | Organization[] | null };
+    const rows = (data ?? []) as unknown as Row[];
+    const orgs: Organization[] = [];
+    for (const r of rows) {
+      const o = r.organizations;
+      if (o == null) continue;
+      if (Array.isArray(o)) {
+        for (const x of o) if (x?.id) orgs.push(x);
+      } else if (o.id) {
+        orgs.push(o);
+      }
+    }
+
+    return { data: orgs };
   },
 
   // Get organization details with members

@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import type { User } from '@supabase/supabase-js';
-import type { Debt, Budget, SavingsGoal, Achievement, FinancialHealthScore } from '../types';
+import type { Debt, Budget, SavingsGoal, Achievement, FinancialHealthScore, GamificationEvent } from '../types';
 import { debtsApi, savingsGoalsApi, gamificationApi } from '../services/api';
+import { computeActivityStreak, sumEventPoints } from '../utils/gamificationStreak';
 import { produce } from 'immer';
 
 interface DebtState {
@@ -33,6 +34,9 @@ interface SavingsGoalState {
 interface GamificationState {
   achievements: Achievement[];
   score: FinancialHealthScore | null;
+  events: GamificationEvent[];
+  pointsTotal: number;
+  activityStreak: number;
   loading: boolean;
   error: string | null;
   fetchGamificationData: () => Promise<void>;
@@ -81,6 +85,9 @@ export const useStore = create<AppState>((set, get) => ({
           state.debtState.error = error;
           state.debtState.loading = false;
         }));
+        if (data) {
+          void gamificationApi.logEvent('debt_recorded', 40, { name: data.name });
+        }
       },
       updateDebt: async (id, updates) => {
         set(produce((state: AppState) => { state.debtState.loading = true; }));
@@ -96,6 +103,7 @@ export const useStore = create<AppState>((set, get) => ({
       },
       deleteDebt: async (id: string) => {
         set(produce((state: AppState) => { state.debtState.loading = true; }));
+        const removed = get().debtState.debts.find((d) => d.id === id);
         const { error } = await debtsApi.deleteDebt(id);
         set(produce((state: AppState) => {
           if (!error) {
@@ -104,6 +112,9 @@ export const useStore = create<AppState>((set, get) => ({
           state.debtState.error = error;
           state.debtState.loading = false;
         }));
+        if (!error && removed && removed.balance <= 0) {
+          void gamificationApi.logEvent('debt_paid_off', 200, { name: removed.name });
+        }
       },
       addFunds: async (id, amount) => {
         const goal = get().savingsGoalState.goals.find(g => g.id === id);
@@ -140,6 +151,9 @@ export const useStore = create<AppState>((set, get) => ({
           state.savingsGoalState.error = error;
           state.savingsGoalState.loading = false;
         }));
+        if (data) {
+          void gamificationApi.logEvent('savings_goal_created', 60, { name: data.name });
+        }
       },
       updateGoal: async (id, updates) => {
         set(produce((state: AppState) => { state.savingsGoalState.loading = true; }));
@@ -152,6 +166,9 @@ export const useStore = create<AppState>((set, get) => ({
           state.savingsGoalState.error = error;
           state.savingsGoalState.loading = false;
         }));
+        if (data && data.current_amount >= data.target_amount) {
+          void gamificationApi.logEvent('savings_goal_reached', 150, { name: data.name });
+        }
       },
       deleteGoal: async (id) => {
         set(produce((state: AppState) => { state.savingsGoalState.loading = true; }));
@@ -170,6 +187,12 @@ export const useStore = create<AppState>((set, get) => ({
         
         const newCurrentAmount = (goal.current_amount || 0) + amount;
         await get().savingsGoalState.actions.updateGoal(id, { current_amount: newCurrentAmount });
+        if (amount > 0) {
+          void gamificationApi.logEvent('savings_contribution', 30, {
+            goal_id: id,
+            amount,
+          });
+        }
       },
     }
   },
@@ -178,25 +201,39 @@ export const useStore = create<AppState>((set, get) => ({
   gamificationState: {
     achievements: [],
     score: null,
+    events: [],
+    pointsTotal: 0,
+    activityStreak: 0,
     loading: false,
     error: null,
     fetchGamificationData: async () => {
       set(state => ({ gamificationState: { ...state.gamificationState, loading: true, error: null } }));
       try {
-        const [achievementsRes, scoreRes] = await Promise.all([
+        const [achievementsRes, scoreRes, eventsRes] = await Promise.all([
           gamificationApi.getAchievements(),
           gamificationApi.getFinancialHealthScore(),
+          gamificationApi.listRecentEvents(250),
         ]);
 
-        if (achievementsRes.error || scoreRes.error) {
-          throw new Error(achievementsRes.error || scoreRes.error || 'Failed to fetch gamification data');
+        if (achievementsRes.error) {
+          throw new Error(achievementsRes.error);
         }
+        if (eventsRes.error) {
+          throw new Error(eventsRes.error);
+        }
+
+        const events = eventsRes.data || [];
+        const pointsTotal = sumEventPoints(events);
+        const activityStreak = computeActivityStreak(events);
 
         set(state => ({
           gamificationState: {
             ...state.gamificationState,
             achievements: achievementsRes.data || [],
-            score: scoreRes.data || null,
+            score: scoreRes.error ? state.gamificationState.score : scoreRes.data || null,
+            events,
+            pointsTotal,
+            activityStreak,
             loading: false,
           },
         }));

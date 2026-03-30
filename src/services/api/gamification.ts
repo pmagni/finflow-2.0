@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import type { Achievement, FinancialHealthScore } from '../../types';
+import type { Achievement, FinancialHealthScore, GamificationEvent } from '../../types';
 
 export const gamificationApi = {
   /**
@@ -26,5 +26,33 @@ export const gamificationApi = {
       .maybeSingle();
 
     return { data, error: error?.message || null };
-  }
+  },
+
+  async listRecentEvents(limit = 200): Promise<{ data: GamificationEvent[] | null; error: string | null }> {
+    const { data, error } = await supabase
+      .from('gamification_events')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    return { data, error: error?.message || null };
+  },
+
+  async logEvent(
+    event_type: string,
+    points_earned: number,
+    metadata?: Record<string, unknown> | null,
+  ): Promise<{ error: string | null }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'User not authenticated' };
+
+    const { error } = await supabase.from('gamification_events').insert({
+      user_id: user.id,
+      event_type,
+      points_earned,
+      metadata: metadata ?? null,
+    });
+
+    return { error: error?.message || null };
+  },
 }; 

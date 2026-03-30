@@ -62,11 +62,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (data && data.length > 0) {
       const userData = data[0];
       setUserRole(userData.user_role);
-      
+
       if (userData.preferences) {
         setUserPreferences(userData.preferences);
       } else {
-        // Create default preferences if none exist
         const defaultPreferences: Omit<UserPreferences, 'id' | 'created_at' | 'updated_at'> = {
           user_id: user.id,
           currency: 'USD',
@@ -133,13 +132,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     getSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
     return () => {
       authListener.subscription.unsubscribe();
@@ -168,4 +165,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};

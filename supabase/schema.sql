@@ -30,6 +30,8 @@ create table if not exists public.debts (
     balance numeric not null,
     interest_rate numeric,
     minimum_payment numeric,
+    institution text,
+    term_months integer,
     created_at timestamp with time zone default timezone('utc', now())
 );
 
@@ -41,6 +43,7 @@ create table if not exists public.debt_plans (
     monthly_income numeric,
     budget_percentage numeric,
     payment_strategy text, -- e.g., 'avalanche', 'snowball'
+    extra_monthly_payment numeric default 0,
     is_active boolean default true,
     created_at timestamp with time zone default timezone('utc', now())
 );
@@ -65,6 +68,8 @@ create table if not exists public.budgets (
     variable_expenses numeric,
     savings_goal numeric,
     discretionary_spend numeric,
+    debt_payment_allocation numeric default 0,
+    leisure_allocation numeric default 0,
     created_at timestamp with time zone default timezone('utc', now())
 );
 
@@ -288,9 +293,9 @@ create policy "Users can view their own gamification events."
 on public.gamification_events for select
 using (auth.uid() = user_id);
 
-create policy "System can insert gamification events."
+create policy "Users can insert their own gamification events."
 on public.gamification_events for insert
-with check (true); -- Allow system to insert events
+with check (auth.uid() = user_id);
 
 -- USER PREFERENCES
 create policy "Users can manage their own preferences."
